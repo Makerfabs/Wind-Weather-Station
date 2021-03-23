@@ -1,24 +1,35 @@
+/*
+
+*/
 #include <Wire.h>
-#include <Adafruit_AHT10.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <DHT.h>
-
 #include <SD.h>
 
-#define DHTPIN 13
+
+
+
+// variables will change:
+int buttonState = 0;         // variable for reading the pushbutton status
+bool tag=0;
+bool ledStateTag=0;
+
+#define DHTPIN 13    // the number of the DHT11 pin
 //#define DHTPIN A0
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-#define VCC_PIN 2
-#define VDD_PIN 7
+#define VCC_PIN 2   //3.3V
+#define VDD_PIN 7   //5V
 #define BUZZER_PIN 12
 #define SD_CS 4
-#define pinInterrupt A0
+#define pinInterrupt A0  // the number of the Wind Speed sensor pin
 #define PM_READ_PIN A1
 #define PM_LED_PIN 10
+#define ledPin 11      // the number of the LED pin
+#define buttonPin  3      // the number of the pushbutton pin
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -26,10 +37,8 @@ DHT dht(DHTPIN, DHTTYPE);
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-Adafruit_AHT10 aht;
-
-#define BMP280_I2C_ADDRESS 0x76
-#define BMP280_DEVICE_ID 0x58
+#define BMP280_I2C_ADDRESS  0x76
+#define BMP280_DEVICE_ID    0x58
 Adafruit_BMP280 bmp; // I2C
 
 int humidity_value = 0;
@@ -64,35 +73,74 @@ void setup()
 
 void loop()
 {
-  wind_speed();
+    // read the state of the pushbutton value:
+  buttonState = digitalRead(buttonPin);
 
-  if ((millis() - sensortime) > 1000)
-  {
-    /*
-    SerialUSB.println("Read aht");
-    aht_read();
-    i2c_scan();
-    */
-
-    SerialUSB.println("Read bmp");
-    bmp_read();
-    //i2c_scan();
-    sensortime = millis();
+  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (buttonState == HIGH) {
+    
   }
-
-  //DHT is slow
-  if ((millis() - dhttime) > 4000)
+  else 
   {
-    SerialUSB.println("Read dht");
-    dht_read();
-    dhttime = millis();
-  }
+    delay(50);
+    if(digitalRead(buttonPin)==0)
+    {
+      tag=!tag;
+      if(tag)
+      {
+        Wire.endTransmission();    //
+        digitalWrite(ledPin, HIGH);// turn LED off:
+        delay(100);digitalWrite(VCC_PIN, LOW);delay(100);
+        digitalWrite(VDD_PIN, LOW); 
+        delay(100);
+        SerialUSB.println("Power 3V3 off");
+      }
+      else
+      {
+         // turn LED on:
+        digitalWrite(ledPin, LOW);
+        delay(100);digitalWrite(VCC_PIN, HIGH);delay(100);
+        digitalWrite(VDD_PIN, HIGH); 
+        delay(100);
+        SerialUSB.println("Power 3V3 on");
 
-  if ((millis() - runtime) > 2000)
-  {
-    sensor_show();
-    runtime = millis();
+        i2c_dev_init();//re-init
+    
+        dht.begin();
+        
+      }
+    }
   }
+  if(!tag)
+  {
+
+    wind_speed();
+      
+    if ((millis() - sensortime) > 1000)
+    {   
+      SerialUSB.println("Read bmp");
+      bmp_read();
+      //i2c_scan();
+      sensortime = millis();
+    }
+      
+    //DHT is slow
+    if ((millis() - dhttime) > 4000)
+    {
+      SerialUSB.println("Read dht");
+      dht_read();
+      dhttime = millis();
+    }
+      
+    if ((millis() - runtime) > 2000)
+    {
+      sensor_show();
+      runtime = millis();
+    }  
+  }
+  
+  //ledStateTag=!ledStateTag;
+  
 }
 
 void pin_init()
@@ -102,7 +150,7 @@ void pin_init()
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(PM_LED_PIN, OUTPUT);
 
-  pinMode(pinInterrupt, INPUT_PULLUP); //设置管脚为输入
+  pinMode(pinInterrupt, INPUT_PULLUP); //set as input pin
   attachInterrupt(digitalPinToInterrupt(pinInterrupt), onChange, FALLING);
 
   digitalWrite(VDD_PIN, LOW);
@@ -206,22 +254,6 @@ void dht_read()
   temperature_value = (int)t;
 }
 
-void aht_read()
-{
-  sensors_event_t humidity, temp;
-  aht.getEvent(&humidity, &temp); // populate temp and humidity objects with fresh data
-
-  humidity_value = humidity.relative_humidity;
-  temperature_value = temp.temperature;
-
-  SerialUSB.print("Temperature: ");
-  SerialUSB.print(temperature_value);
-  SerialUSB.println(" C");
-  SerialUSB.print("Humidity: ");
-  SerialUSB.print(humidity_value);
-  SerialUSB.println("%");
-}
-
 void bmp_read()
 {
   SerialUSB.print(F("Temperature = "));
@@ -250,16 +282,6 @@ void i2c_dev_init()
       ; // Don't proceed, loop forever
   }
   SerialUSB.println("SSD1306 found");
-
-  /*
-  if (!aht.begin())
-  {
-    SerialUSB.println("Could not find AHT10? Check wiring");
-    while (1)
-      ;
-  }
-  SerialUSB.println("AHT10 found");
-*/
 
   if (!bmp.begin(BMP280_I2C_ADDRESS, BMP280_DEVICE_ID))
   {
@@ -449,8 +471,8 @@ int pm25()
   digitalWrite(PM_LED_PIN, HIGH); // power on the LED
   delayMicroseconds(samplingTime);
 
-  voMeasured = analogRead(PM_READ_PIN); // read the dust value
-
+  voMeasured = analogRead(PM_READ_PIN); // read the dust value   
+  voMeasured = voMeasured*2.0/3.0;//5V to 3.3V
   delayMicroseconds(deltaTime);
   digitalWrite(PM_LED_PIN, LOW); // turn the LED off
   delayMicroseconds(sleepTime);
