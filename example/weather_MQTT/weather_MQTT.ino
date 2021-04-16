@@ -67,6 +67,8 @@ void setup()
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(PM_LED_PIN, OUTPUT);
     pinMode(pinInterrupt, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(pinInterrupt), onChange, FALLING);
+
     pinMode(PWR_KEY, OUTPUT);
     pinMode(RST_KEY, OUTPUT);
     pinMode(LOW_PWR_KEY, OUTPUT);
@@ -468,4 +470,13 @@ int pm25()
   if(dustDensity < 5)
       dustDensity = 0;
   return (int)dustDensity;
+}
+
+void onChange()
+{
+  if (digitalRead(pinInterrupt) == LOW)
+    Count++;
+  //      Serial.println("Key Down");
+  //   else
+  //      Serial.println("Key UP");
 }
