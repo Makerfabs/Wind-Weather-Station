@@ -118,7 +118,7 @@ void setup()
     //String topic_H = "AT+MQTTPUB=\"/public/TEST/makerfabs-H\",\""+(String)h+"\",0,0,0";
 
     SerialUSB.println(topic_T);
-    sendData(topic_T, 1000, DEBUG);
+    //sendData(topic_T, 1000, DEBUG);
     SerialUSB.println(topic_H);
 
     i2c_dev_init();
@@ -156,10 +156,10 @@ void loop()
     
     if ((millis() - Mqtttime) > 16000)
     {
-      String topic_P = "AT+MQTTPUB=\"/public/TEST/makerfabs-P\",\""+(String)pressure_value+"\",0,0,0";
-      String topic_W = "AT+MQTTPUB=\"/public/TEST/makerfabs-W\",\""+(String)speed_value+"\",0,0,0";
-      String topic_T = "AT+MQTTPUB=\"/public/TEST/makerfabs-T\",\""+(String)temperature_value+"\",0,0,0";
-      String topic_H = "AT+MQTTPUB=\"/public/TEST/makerfabs-H\",\""+(String)humidity_value+"\",0,0,0";
+      String topic_P = "AT+MQTTPUB=\"/public/TEST/makerfabs-P\",\""+(String)pressure_value+" Pa\",0,0,0";
+      String topic_W = "AT+MQTTPUB=\"/public/TEST/makerfabs-W\",\""+(String)speed_value+" m/s\",0,0,0";
+      String topic_T = "AT+MQTTPUB=\"/public/TEST/makerfabs-T\",\""+(String)temperature_value+" C\",0,0,0";
+      String topic_H = "AT+MQTTPUB=\"/public/TEST/makerfabs-H\",\""+(String)humidity_value+" %RH\",0,0,0";
       sendData(topic_T, 1000, DEBUG);
       SerialUSB.println("send T");
       sendData(topic_H, 1000, DEBUG);
@@ -430,9 +430,12 @@ void sensor_show()
 
 void wind_speed()
 {
+  lastDebounceTime = millis();
+  Count = 0;
+  while(!((millis() - lastDebounceTime) > debounceDelay));
   if ((millis() - lastDebounceTime) > debounceDelay)
   {
-    lastDebounceTime = millis();
+    //lastDebounceTime = millis();
     speed_value = Count * 8.75 * 0.01;
     SerialUSB.print(speed_value);
     Count = 0;
