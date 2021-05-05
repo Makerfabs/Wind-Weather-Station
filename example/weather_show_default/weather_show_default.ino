@@ -8,28 +8,26 @@
 #include <DHT.h>
 #include <SD.h>
 
-
-
-
 // variables will change:
-int buttonState = 0;         // variable for reading the pushbutton status
-bool tag=0;
-bool ledStateTag=0;
+int buttonState = 0; // variable for reading the pushbutton status
+bool tag = 0;
+bool ledStateTag = 0;
 
-#define DHTPIN 13    // the number of the DHT11 pin
+#define DHTPIN 13 // the number of the DHT11 pin
 //#define DHTPIN A0
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-#define VCC_PIN 2   //3.3V
-#define VDD_PIN 7   //5V
+#define VCC_PIN 2 //3.3V
+#define VDD_PIN 7 //5V
 #define BUZZER_PIN 12
 #define SD_CS 4
-#define pinInterrupt A0  // the number of the Wind Speed sensor pin
+#define pinInterrupt A0 // the number of the Wind Speed sensor pin
 #define PM_READ_PIN A1
 #define PM_LED_PIN 10
-#define ledPin 11      // the number of the LED pin
-#define buttonPin  3      // the number of the pushbutton pin
+#define ledPin 11   // the number of the LED pin
+#define buttonPin 3 // the number of the pushbutton pin
+#define UV_PIN A4
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -37,8 +35,8 @@ DHT dht(DHTPIN, DHTTYPE);
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-#define BMP280_I2C_ADDRESS  0x76
-#define BMP280_DEVICE_ID    0x58
+#define BMP280_I2C_ADDRESS 0x76
+#define BMP280_DEVICE_ID 0x58
 Adafruit_BMP280 bmp; // I2C
 
 int humidity_value = 0;
@@ -73,57 +71,60 @@ void setup()
 
 void loop()
 {
-    // read the state of the pushbutton value:
+  // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
 
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-  if (buttonState == HIGH) {
-    
+  if (buttonState == HIGH)
+  {
   }
-  else 
+  else
   {
     delay(50);
-    if(digitalRead(buttonPin)==0)
+    if (digitalRead(buttonPin) == 0)
     {
-      tag=!tag;
-      if(tag)
+      tag = !tag;
+      if (tag)
       {
-        Wire.endTransmission();    //
-        digitalWrite(ledPin, HIGH);// turn LED off:
-        delay(100);digitalWrite(VCC_PIN, LOW);delay(100);
-        digitalWrite(VDD_PIN, LOW); 
+        Wire.endTransmission();     //
+        digitalWrite(ledPin, HIGH); // turn LED off:
+        delay(100);
+        digitalWrite(VCC_PIN, LOW);
+        delay(100);
+        digitalWrite(VDD_PIN, LOW);
         delay(100);
         SerialUSB.println("Power 3V3 off");
       }
       else
       {
-         // turn LED on:
+        // turn LED on:
         digitalWrite(ledPin, LOW);
-        delay(100);digitalWrite(VCC_PIN, HIGH);delay(100);
-        digitalWrite(VDD_PIN, HIGH); 
+        delay(100);
+        digitalWrite(VCC_PIN, HIGH);
+        delay(100);
+        digitalWrite(VDD_PIN, HIGH);
         delay(100);
         SerialUSB.println("Power 3V3 on");
 
-        i2c_dev_init();//re-init
-    
+        i2c_dev_init(); //re-init
+
         dht.begin();
-        
       }
     }
   }
-  if(!tag)
+  if (!tag)
   {
 
     wind_speed();
-      
+
     if ((millis() - sensortime) > 1000)
-    {   
+    {
       SerialUSB.println("Read bmp");
       bmp_read();
       //i2c_scan();
       sensortime = millis();
     }
-      
+
     //DHT is slow
     if ((millis() - dhttime) > 4000)
     {
@@ -131,16 +132,15 @@ void loop()
       dht_read();
       dhttime = millis();
     }
-      
+
     if ((millis() - runtime) > 2000)
     {
       sensor_show();
       runtime = millis();
-    }  
+    }
   }
-  
+
   //ledStateTag=!ledStateTag;
-  
 }
 
 void pin_init()
@@ -331,6 +331,7 @@ void sensor_show()
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(2);
+
   switch (show_index)
   {
   case 0:
@@ -375,11 +376,20 @@ void sensor_show()
     display.print(pressure_value);
     display.println(" Pa");
     break;
+
+  case 4:
+    display.setCursor(0, 0);
+    display.print("UV:");
+    display.println(UV());
+
+    display.setCursor(0, 16);
+    display.println("mW/m^2");
+    break;
   }
 
   display.display(); // Show initial text
   show_index++;
-  show_index %= 4;
+  show_index %= 5;
 }
 
 void sd_test()
@@ -471,8 +481,8 @@ int pm25()
   digitalWrite(PM_LED_PIN, HIGH); // power on the LED
   delayMicroseconds(samplingTime);
 
-  voMeasured = analogRead(PM_READ_PIN); // read the dust value   
-  voMeasured = voMeasured*2.0/3.0;//5V to 3.3V
+  voMeasured = analogRead(PM_READ_PIN); // read the dust value
+  voMeasured = voMeasured * 2.0 / 3.0;  //5V to 3.3V
   delayMicroseconds(deltaTime);
   digitalWrite(PM_LED_PIN, LOW); // turn the LED off
   delayMicroseconds(sleepTime);
@@ -487,4 +497,26 @@ int pm25()
 
   //SerialUSB.println(dustDensity); // unit: ug/m3
   return (int)dustDensity;
+}
+
+double UV()
+{
+  int sensorValue;
+  long sum = 0;
+  for (int i = 0; i < 256; i++) // accumulate readings for 1024 times
+  {
+    sensorValue = analogRead(UV_PIN);
+    sum = sensorValue + sum;
+    delay(2);
+  }
+  long meanVal = sum / 256; // get mean value
+  double UV_value = (meanVal * 1000 / 4.3 - 83) / 21;
+
+  SerialUSB.print("The A4 is:");
+  SerialUSB.println(meanVal); // get a detailed calculating expression for UV index in schematic files.
+  SerialUSB.print("The current UV index is:");
+  SerialUSB.print(UV_value); // get a detailed calculating expression for UV index in schematic files.
+  SerialUSB.print(" mW/m^2\n");
+
+  return UV_value;
 }
