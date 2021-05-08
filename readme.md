@@ -53,6 +53,7 @@ Weather station based on Maduino A9G.With onboard DHT11 temperature and humidity
 ![interface](md_pic/interface.jpg)
 
 1. Interface of anemometer
+
 |   Pin   |   Mark   |   Definition   |
 | ---- | ---- | ---- |
 |   A   |   VCC   |   Power supply   |
