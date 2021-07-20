@@ -2,10 +2,11 @@
 
 ```c++
 /*
-Version:		V1.1
+Version:		V2.0
 Author:			Vincent
 Create Date:	2021/2/23
 Note:
+	2021/7/20: Add a weather station project.
 	2021/5/5:Add Seeed UV Sensor example.
 	
 */
@@ -25,6 +26,10 @@ Note:
 # Wind Weather Station
 
 ## Intruduce
+
+### Product Link: [Open Wind Station GPRS/ MQTT](https://www.makerfabs.com/open-wind-statation-gprs-mqtt.html)
+
+### Wiki Link:[Wind_Weather_Station](https://www.makerfabs.com/wiki/index.php?title=Wind_Weather_Station)
 
 Weather station based on Maduino A9G.With onboard DHT11 temperature and humidity sensor, BMP280 air pressure sensor and SSD1306LCD screen.It can be connected with anemometer and PM2.5 air quality sensor.
 
@@ -115,3 +120,42 @@ A simple example of MQTT communication. Data is sent by MQTT protocol through A9
 
 A simple low-power test program that turns off power to the A9G and all sensors and puts the SAMD21 to sleep.
 
+
+
+# Project : Weather Station
+
+**A long-maintained weather station project, real-time weather from Makerfabs can be accessed via ThingSpeak and Makerfabs Wiki (Shenzhen, China).**
+
+![weather_station](md_pic/weahter_station1.jpg)
+
+The weather link is as follows:
+
+[Makerfabs Wiki Weather](https://www.makerfabs.com/wiki/index.php?title=Weather_Show)
+
+[ThingSpeak Show](https://thingspeak.com/channels/1243124)
+
+[HackDay.io wind weather station](https://hackaday.io/project/177972-wind-weather-station)
+
+## Code
+
+The code is divided into two parts, one is the Weather Station, which measures the weather data and sends it to ThingSpeak and MQTT servers.
+
+And there is a use of ESP32 as a terminal to receive real-time information code.
+
+![weather_station3](md_pic/weahter_station3.jpg)
+
+## Weather Analysis
+
+The test lasted for ten days in June, and the analysis data are as follows.
+
+![weather_station](md_pic/weahter_station2.jpg)
+
+And I also make a python file to analyse data, like max or min temperature.
+
+Code is in : \Wind-Weather-Station\Project_WeatherStation\csv_read\csv_test.py
+
+## 3D file
+
+Weather station box and anemometer, wind direction gauge, fixed structure of solar panel.
+
+![](md_pic/weahter_station4.jpg)

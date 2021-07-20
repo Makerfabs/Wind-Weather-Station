@@ -495,7 +495,8 @@ int pm25()
   // Chris Nafis (c) 2012
   dustDensity = 170 * calcVoltage - 0.1;
 
-  //SerialUSB.println(dustDensity); // unit: ug/m3
+  SerialUSB.println("PM2.5:");
+  SerialUSB.println(dustDensity); // unit: ug/m3
   return (int)dustDensity;
 }
 
